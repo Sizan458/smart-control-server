@@ -36,8 +36,15 @@ app .post ("/all-apartments", async(req, res) =>{
 })
 //show all data in sever site
 app.get("/all-apartments", async (req, res) => {
-    const result = await ALLApartment.find().toArray();
-    res.send(result);
+  //pagination
+  const page= Number(req.query.page);
+  const limit= Number(req.query.limit);
+  //pagination logic
+  const skip =(page-1)*limit
+    const result = await ALLApartment.find().limit(limit).toArray();
+    //count data
+  const total = await ALLApartment.countDocuments()
+    res.send({result,total});
   });
   //get data by id
   app.get("/all-apartments/:id",async(req, res) => {
