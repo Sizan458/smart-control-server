@@ -26,6 +26,7 @@ async function run() {
   try {
     //create a new  database collection
     const ALLApartment=  client.db("smart-build-control-server").collection("all-apartments")
+    const  AllAgreements= client.db("smart-build-control-server").collection("all-agreements")
     //all apartments  databases
     //insert data into database
 app .post ("/all-apartments", async(req, res) =>{
@@ -52,8 +53,32 @@ app.get("/all-apartments", async (req, res) => {
     const query = {
         _id: new ObjectId(id),
       };
-      console.log(query);
+     
     const result = await ALLApartment.findOne(query);
+    res.send(result);
+  })
+  // agreements related  api
+  // add data to database
+  app .post ("/all-agreements", async(req, res) =>{
+    const agreements = req.body;
+    const result = await AllAgreements.insertOne(agreements);
+    res.send(result);
+
+})
+//read all data
+app.get("/all-agreements", async (req, res) => {
+      const result = await AllAgreements.find().toArray();
+      res.send(result);
+    });
+
+    //get data by id
+  app.get("/all-agreements/:id",async(req, res) => {
+    const id = req.params.id;
+    const query = {
+        _id: new ObjectId(id),
+      };
+     
+    const result = await AllAgreements.findOne(query);
     res.send(result);
   })
     // Connect the client to the server	(optional starting in v4.7)
