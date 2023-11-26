@@ -27,6 +27,7 @@ async function run() {
     //create a new  database collection
     const ALLApartment=  client.db("smart-build-control-server").collection("all-apartments")
     const  AllAgreements= client.db("smart-build-control-server").collection("all-agreements")
+    const  AllUser= client.db("smart-build-control-server").collection("all-user")
     //all apartments  databases
     //insert data into database
 app .post ("/all-apartments", async(req, res) =>{
@@ -79,6 +80,35 @@ app.get("/all-agreements", async (req, res) => {
       };
      
     const result = await AllAgreements.findOne(query);
+    res.send(result);
+  })
+  // all user related  api
+  // add data to database
+  app .post ("/all-user", async(req, res) =>{
+    const user= req.body;
+    const query ={email:user.email}
+    const existingUser = await AllUser.findOne(query);
+    if(existingUser){
+      res.send({message:"User already exists",insertedId:null})
+    }
+    const result = await AllUser.insertOne(user);
+    res.send(result);
+
+})
+//read all data
+app.get("/all-user", async (req, res) => {
+      const result = await AllUser.find().toArray();
+      res.send(result);
+    });
+
+    //get data by id
+  app.get("/all-user/:id",async(req, res) => {
+    const id = req.params.id;
+    const query = {
+        _id: new ObjectId(id),
+      };
+     
+    const result = await AllUser.findOne(query);
     res.send(result);
   })
     // Connect the client to the server	(optional starting in v4.7)
