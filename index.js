@@ -28,6 +28,7 @@ async function run() {
     const ALLApartment=  client.db("smart-build-control-server").collection("all-apartments")
     const  AllAgreements= client.db("smart-build-control-server").collection("all-agreements")
     const  AllUser= client.db("smart-build-control-server").collection("all-user")
+    const  AllAnnouncement= client.db("smart-build-control-server").collection("all-announcement")
     //all apartments  databases
     //insert data into database
 app .post ("/all-apartments", async(req, res) =>{
@@ -89,7 +90,7 @@ app.get("/all-agreements", async (req, res) => {
     const query ={email:user.email}
     const existingUser = await AllUser.findOne(query);
     if(existingUser){
-      res.send({message:"User already exists",insertedId:null})
+     return res.send({message:"User already exists",insertedId:null})
     }
     const result = await AllUser.insertOne(user);
     res.send(result);
@@ -109,6 +110,30 @@ app.get("/all-user", async (req, res) => {
       };
      
     const result = await AllUser.findOne(query);
+    res.send(result);
+  })
+  // all announcement related  api
+  // add data to database
+  app .post ("/all-announcement", async(req, res) =>{
+    const announcement= req.body;
+    const result = await AllAnnouncement.insertOne(announcement);
+    res.send(result);
+
+})
+//read all data
+app.get("/all-announcement", async (req, res) => {
+      const result = await AllAnnouncement.find().toArray();
+      res.send(result);
+    });
+
+    //get data by id
+  app.get("/all-announcement/:id",async(req, res) => {
+    const id = req.params.id;
+    const query = {
+        _id: new ObjectId(id),
+      };
+     
+    const result = await AllAnnouncement.findOne(query);
     res.send(result);
   })
     // Connect the client to the server	(optional starting in v4.7)
