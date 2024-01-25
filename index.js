@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
 import { MongoClient, ObjectId, ServerApiVersion } from 'mongodb';
+import jwt, { decode } from  'jsonwebtoken'
 
 const app = express();
 const port =process.env.PORT ||5001;
@@ -29,6 +30,28 @@ async function run() {
     const  AllAgreements= client.db("smart-build-control-server").collection("all-agreements")
     const  AllUser= client.db("smart-build-control-server").collection("all-user")
     const  AllAnnouncement= client.db("smart-build-control-server").collection("all-announcement")
+//jwt related stuff
+app.post("/jwt",async(req,res)=>{
+  const  user = req.body
+  const token=jwt.sign(user,process.env.ACCESS_TOKEN,{expiresIn:"36h"})
+  res.send({token})
+})
+//middleware
+const verifyToken = (req , res,next)=>{
+  console.log('inside verify token', req.headers);
+  if(!req.headers.authorization){
+    return  res.status(401).send({message:"forbidden authorization"}) 
+  }
+  const token = req.headers.authorization.split(' ')[1]
+  jwt.verify(token, process.env.ACCESS_TOKEN,(error, decode)=>{
+  if (error){
+    return res.status(401).send({message:"forbidden authorization"}) 
+  }
+  req.decode=decode
+  })
+ // next();
+}
+
     //all apartments  databases
     //insert data into database
 app .post ("/all-apartments", async(req, res) =>{
@@ -83,6 +106,16 @@ app.get("/all-agreements", async (req, res) => {
     const result = await AllAgreements.findOne(query);
     res.send(result);
   })
+  //delete api
+  app.delete("/all-agreements/:id", async (req, res) => {
+    const id = req.params.id;
+    
+    const query = {
+      _id: new ObjectId(id),
+    };
+    const result = await AllAgreements.deleteOne(query);
+   res.send(result);
+  });
   // all user related  api
   // add data to database
   app .post ("/all-user", async(req, res) =>{
@@ -97,13 +130,15 @@ app.get("/all-agreements", async (req, res) => {
 
 })
 //read all data
-app.get("/all-user", async (req, res) => {
+app.get("/all-user", verifyToken,  async (req, res) => {
+     console.log(req.headers)
       const result = await AllUser.find().toArray();
       res.send(result);
     });
 
     //get data by id
   app.get("/all-user/:id",async(req, res) => {
+    
     const id = req.params.id;
     const query = {
         _id: new ObjectId(id),
@@ -112,6 +147,46 @@ app.get("/all-user", async (req, res) => {
     const result = await AllUser.findOne(query);
     res.send(result);
   })
+  
+  //delete  user
+  app.delete("/all-user/:id", async (req, res) => {
+    const id = req.params.id;
+    
+    const query = {
+      _id: new ObjectId(id),
+    };
+    const result = await AllUser.deleteOne(query);
+   res.send(result);
+  });
+//make admin
+app.patch('/all-user/admin/:id',async(req, res)=>{
+  const id= req.params.id;
+  const filter={_id: new  ObjectId(id)}
+  const  makeAdmin={
+    $set:{
+      role: 'admin',
+    }
+  }
+  const result = await  AllUser .updateOne(filter, makeAdmin)
+  
+  
+  res.send(result)
+})
+//make member
+app.patch('/all-user/member/:id',async(req, res)=>{
+  const id= req.params.id;
+  const filter={_id: new  ObjectId(id)}
+  const  makeMember={
+    $set:{
+      role: 'member',
+    }
+  }
+  const result = await  AllUser .updateOne(filter, makeMember)
+  
+  
+  res.send(result)
+})
+
   // all announcement related  api
   // add data to database
   app .post ("/all-announcement", async(req, res) =>{
